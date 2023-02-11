@@ -1,0 +1,123 @@
+---
+# ubuntu-install-k8s.yml for nerve4-managed-kubernetes
+
+- name: Install and configure dependencies
+  ansible.builtin.apt:
+    pkg: "{{ ubuntu_pkgs }}"
+
+- name: Create containerd config file
+  ansible.builtin.file:
+    path: "/etc/modules-load.d/containerd.conf"
+    state: touch
+
+- name: Setup containerd config file
+  ansible.builtin.blockinfile:
+    path: "/etc/modules-load.d/containerd.conf"
+    block: |
+      overlay
+      br_netfilter
+
+- name: Run modprobe
+  become: true
+  ansible.builtin.shell: |
+    sudo modprobe overlay
+    sudo modprobe br_netfilter
+
+- name: Set system configurations for Kubernetes networking
+  ansible.builtin.file:
+    path: "/etc/sysctl.d/99-kubernetes-cri.conf"
+    state: "touch"
+
+- name: Setup Kubernetes networking config
+  ansible.builtin.blockinfile:
+    path: "/etc/sysctl.d/99-kubernetes-cri.conf"
+    block: |
+      net.bridge.bridge-nf-call-iptables = 1
+      net.bridge.bridge-nf-call-ip6tables = 1
+      net.ipv4.ip_forward = 1
+
+- name: Apply new settings
+  become: true
+  ansible.builtin.command: 
+    cmd: sysctl --system
+
+- name: Add docker gpg key
+  become: true
+  ansible.builtin.shell: |
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key --keyring /etc/apt/trusted.gpg.d/docker.gpg add -
+
+- name: Add ubuntu 18 focal stable repository into sources list
+  become: true
+  ansible.builtin.shell: |
+    sudo add-apt-repository "deb [arch=arm64] https://download.docker.com/linux/ubuntu bionic stable" -y
+  when:
+    - ansible_distribution_major_version == "18"
+
+- name: Add ubuntu 20 focal stable repository into sources list
+  become: true
+  ansible.builtin.shell: |
+    sudo add-apt-repository "deb [arch=arm64] https://download.docker.com/linux/ubuntu focal stable" -y 
+  when:
+    - ansible_distribution_major_version == "20"
+
+- name: Add ubuntu 22 focal stable repository into sources list
+  become: true
+  ansible.builtin.shell: |
+    sudo add-apt-repository "deb [arch=arm64] https://download.docker.com/linux/ubuntu kinetic stable" -y
+  when:
+    - ansible_distribution_major_version == "22"
+
+- name: Update Cache
+  become: true
+  ansible.builtin.shell: |
+    sudo apt-get update
+
+- name: Install containerd on Ubuntu based hosts
+  ansible.builtin.apt: 
+    name: "containerd"
+    state: present
+
+- name: Create a containerd if it does not exist
+  ansible.builtin.file:
+    path: /etc/containerd
+    state: directory
+    mode: '0644'
+
+- name: Create a containerd config.toml
+  become: true
+  ansible.builtin.shell: |
+    sudo containerd config default | sudo tee /etc/containerd/config.toml
+
+- name: Restart and Enable containerd service
+  ansible.builtin.service:
+    name: containerd
+    enabled: yes
+    state: restarted
+
+- name: Disable swap
+  become: true
+  ansible.builtin.shell: |
+    sudo swapoff -a
+    sudo sed -i '/\/swapfile/d' /etc/fstab
+
+- name: Add gpg key
+  become: true
+  ansible.builtin.shell: |
+    curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+
+- name: Create kubernetes repo file
+  ansible.builtin.file:
+    path: "/etc/apt/sources.list.d/kubernetes.list"
+    state: "touch"
+
+- name: Add K8s Source
+  ansible.builtin.blockinfile:
+    path: "/etc/apt/sources.list.d/kubernetes.list"
+    block: |
+      deb https://apt.kubernetes.io/ kubernetes-xenial main
+
+- name: Install kubernetes packages
+  become: true
+  ansible.builtin.apt:
+    name: "{{ kubernetes_ubuntu_pkgs }}"
+    update_cache: yes
