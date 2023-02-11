@@ -1,0 +1,7 @@
+---
+# handlers for nerve4-managed-kubernetes
+
+- name: Restart containerd
+  ansible.builtin.service:
+    name: containerd
+    state: restarted

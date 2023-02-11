@@ -1,0 +1,22 @@
+---
+# setup-users.yml for nerve4-managed-kubernetes
+
+- name: Create the "{{ k8s_admin_user }}" user account
+  ansible.builtin.user:
+    name: "{{ k8s_admin_user }}"
+    append: yes 
+    state: present 
+    createhome: yes 
+    shell: /bin/bash
+
+- name: Allow "{{ k8s_admin_user }}" to use sudo without needing a password
+  ansible.builtin.lineinfile:
+    path: /etc/sudoers
+    line: "{{ k8s_admin_user_sudoers }}"
+    validate: 'visudo -cf %s'
+
+- name: Set up authorized keys for the "{{ k8s_admin_user }}" user
+  ansible.posix.authorized_key: 
+    user: "{{ k8s_admin_user }}"
+    key: "{{ k8s_admin_ssh_key }}"
+    state: present
