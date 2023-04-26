@@ -1,6 +1,10 @@
 ---
 # ubuntu-install-k8s.yml for nerve4-managed-kubernetes
 
+- name: Update package cache
+  ansible.builtin.apt:
+    update_cache: yes
+
 - name: Install and configure dependencies
   ansible.builtin.apt:
     pkg: "{{ ubuntu_pkgs }}"
@@ -23,14 +27,14 @@
     sudo modprobe overlay
     sudo modprobe br_netfilter
 
-- name: Set system configurations for Kubernetes networking
+- name: Create sysctl for Containerd
   ansible.builtin.file:
-    path: "/etc/sysctl.d/99-kubernetes-cri.conf"
+    path: "/etc/sysctl.d/containerd.conf"
     state: "touch"
 
-- name: Setup Kubernetes networking config
+- name: Setup sysctl for Containerd
   ansible.builtin.blockinfile:
-    path: "/etc/sysctl.d/99-kubernetes-cri.conf"
+    path: "/etc/sysctl.d/containerd.conf"
     block: |
       net.bridge.bridge-nf-call-iptables = 1
       net.bridge.bridge-nf-call-ip6tables = 1
@@ -45,13 +49,6 @@
   become: true
   ansible.builtin.shell: |
     curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key --keyring /etc/apt/trusted.gpg.d/docker.gpg add -
-
-- name: Add ubuntu 18 focal stable repository into sources list
-  become: true
-  ansible.builtin.shell: |
-    sudo add-apt-repository "deb [arch=arm64] https://download.docker.com/linux/ubuntu bionic stable" -y
-  when:
-    - ansible_distribution_major_version == "18"
 
 - name: Add ubuntu 20 focal stable repository into sources list
   become: true
@@ -98,7 +95,8 @@
   become: true
   ansible.builtin.shell: |
     sudo swapoff -a
-    sudo sed -i '/\/swapfile/d' /etc/fstab
+    sudo rm /swap.img
+    sudo sed -i '/\tswap\t/d' /etc/fstab
 
 - name: Add gpg key
   become: true

@@ -1,0 +1,10 @@
+---
+# setup-calico.yml for nerve4-managed-kubernetes - TBC
+
+#- name: Install Pod network
+#  become: yes
+#  become_user: "{{ k8s_admin_user }}"
+#  ansible.builtin.shell: |
+#    kubectl apply -f {{ k8s_network_cni }}
+#  args:
+#    chdir: $HOME

@@ -1,7 +1,7 @@
 ---
 # main.yml for nerve4-managed-kubernetes
 
-- name: "Check if the /etc/modprobe.d/blacklist-ipv6.conf exists"
+- name: Check if the /etc/modprobe.d/blacklist-ipv6.conf exists
   stat:
     path: "/etc/modules-load.d/containerd.conf"
   register: containerd_check
@@ -25,3 +25,9 @@
 
 - include: setup-k8s-workers.yml
   when: workers_var is defined and workers_var
+
+#- include: setup-calico.yml - TBC
+#  when: calico_var is defined and calico_var
+
+#- include: setup-cilium.yml - TBC
+#  when: cilium_var is defined and cilium_var
