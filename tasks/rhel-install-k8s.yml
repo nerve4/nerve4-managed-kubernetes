@@ -1,13 +1,6 @@
 ---
 # rhel-install-k8s.yml for nerve4-managed-kubernetes
 
-- name: Install and configure dependencies on Rhel 7.x
-  ansible.builtin.yum:
-    name: "{{ rhel7_pkgs }}"
-    state: present
-  when:
-    - ansible_distribution_major_version == "7"
-
 - name: Install and configure dependencies on Rhel 8.x / Rocky Linux
   ansible.builtin.dnf:
     name: "{{ rhel8_pkgs }}"
@@ -34,14 +27,14 @@
     sudo modprobe overlay
     sudo modprobe br_netfilter
 
-- name: Set system configurations for Kubernetes networking
+- name: Create sysctl for Containerd
   ansible.builtin.file:
-    path: "/etc/sysctl.d/kubernetes.conf"
+    path: "/etc/sysctl.d/containerd.conf"
     state: "touch"
 
-- name: Setup Kubernetes networking config
+- name: Setup sysctl for Containerd
   ansible.builtin.blockinfile:
-    path: "/etc/sysctl.d/kubernetes.conf"
+    path: "/etc/sysctl.d/containerd.conf"
     block: |
       net.bridge.bridge-nf-call-iptables = 1
       net.bridge.bridge-nf-call-ip6tables = 1
@@ -59,21 +52,6 @@
     baseurl: https://download.docker.com/linux/centos/$releasever/$basearch/stable
     gpgcheck: true
     gpgkey: https://download.docker.com/linux/centos/gpg
-
-- name: Update YUM
-  become: true
-  ansible.builtin.command: 
-    cmd: yum update -y
-  when:
-    - ansible_distribution_major_version == "7"
-
-- name: Install containerd
-  become: true
-  ansible.builtin.yum:
-    name: "containerd.io"
-    state: latest
-  when:
-    - ansible_distribution_major_version == "7"
 
 - name: Update DNF
   become: true
@@ -118,14 +96,6 @@
     baseurl: https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
     gpgcheck: true
     gpgkey: https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
-
-- name: Install kubernetes packages
-  become: true
-  ansible.builtin.yum:
-    name: "{{ kubernetes_rhel7_pkgs }}"
-    state: present
-  when:
-    - ansible_distribution_major_version == "7"
 
 - name: Install kubernetes packages
   become: true

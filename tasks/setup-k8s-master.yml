@@ -2,11 +2,12 @@
 # setup-k8s-master.yml for nerve4-managed-kubernetes
 
 - name: Initialize the cluster
+  become: yes
+  become_user: "{{ k8s_admin_user }}"
   ansible.builtin.shell: |
-    kubeadm init --pod-network-cidr={{ k8s_pod_network }}
+    sudo kubeadm init --pod-network-cidr={{ k8s_pod_network }} --kubernetes-version "{{ kubernetes_ver }}"
   args:
     chdir: $HOME
-    creates: cluster_initialized.txt
 
 - name: Create .kube directory
   become: yes
@@ -31,14 +32,6 @@
 - name: Pause for "{{ k8s_controlplane_timoe }}" seconds to Controlplain
   ansible.builtin.pause:
     seconds: "{{ k8s_controlplane_timoe }}"
-
-- name: Install Pod network
-  become: yes
-  become_user: "{{ k8s_admin_user }}"
-  ansible.builtin.shell: |
-    kubectl apply -f {{ k8s_network_cni }}
-  args:
-    chdir: $HOME
 
 - name: Get the token for joining the worker nodes
   become: yes

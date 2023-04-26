@@ -1,0 +1,30 @@
+---
+# setup-base-cni.yml for nerve4-managed-kubernetes
+
+- name: Create CNI Directory if it does not exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - "{{ cni_dir }}"
+    - "{{ cni_bin }}"
+
+- name: Download CNI-plugin
+  ansible.builtin.get_url:
+    url: "{{ cni_plugin_link }}"
+    dest: "/tmp/cni-plugins-linux-amd64-v{{ cni_plugin_ver }}.tgz"
+
+- name: unpack CNI-plugin
+  ansible.builtin.unarchive:
+    src: "/tmp/cni-plugins-linux-amd64-v{{ cni_plugin_ver }}.tgz"
+    dest: "{{ cni_bin }}"
+    remote_src: yes
+
+- name: Upload base CNI plugin config file
+  become: yes
+  ansible.builtin.template:
+    src: 10-containerd-net.j2
+    dest: "{{ cni_dir }}/10-containerd-net.conflist"
+    mode: '0644'
+  notify: Restart containerd
