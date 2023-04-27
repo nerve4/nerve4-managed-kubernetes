@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 
+## [0.2.0] - 2023-04-27
+
+### Changed
+
+- Extend Readme with updated info.
+
+
 ## [0.2.0] - 2023-04-26
 
 ### Added
@@ -13,13 +20,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - support of kubernetes 1.27
 - setup cni-plugin extension
 
-
 ### Changed
 
 - RHel 7 support has been removed
 - Ubuntu 18 support has been removed
 - Pod Network has been removed, will be separated in next versions
-
 
 ### Fixed
 
@@ -32,7 +37,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 - nerve4-managed-kubernetes
-
 
 ### Changed
 
