@@ -14,9 +14,7 @@ The `ansible.posix.authorized_key` module [module](https://docs.ansible.com/ansi
 ## Tasks descriptions
 
 - main.yml - Run the OS check and run the relevant playbook
-- setup-base-cni.yml - Setup CNI plugin
-- setup-calico.yml - Setup Calico Pod Network
-- setup-cilium.yml - Setup Cilium Pod Network
+- setup-base-cni.yml - Setup CNI plugin as default
 - setup-k8s-master.yml - Setup Cluster ControlPlane Node(s)
 - setup-k8s-workers.yml - Setup Cluster Worker Node(s)
 - setup-users.yml - Setup kube admin user

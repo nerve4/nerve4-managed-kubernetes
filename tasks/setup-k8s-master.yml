@@ -29,9 +29,9 @@
   ansible.builtin.shell: |
     sudo chown $(id -u):$(id -g) $HOME/.kube/config
 
-- name: Pause for "{{ k8s_controlplane_timoe }}" seconds to Controlplain
+- name: Pause for "{{ k8s_controlplane_timeo }}" seconds on Controlplane
   ansible.builtin.pause:
-    seconds: "{{ k8s_controlplane_timoe }}"
+    seconds: "{{ k8s_controlplane_timeo }}"
 
 - name: Get the token for joining the worker nodes
   become: yes
