@@ -45,29 +45,31 @@
   ansible.builtin.command: 
     cmd: sysctl --system
 
+- name: Create keyrings directory
+  become: yes
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: 0755
+
 - name: Add docker gpg key
   become: true
   ansible.builtin.shell: |
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key --keyring /etc/apt/trusted.gpg.d/docker.gpg add -
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+    sudo chmod a+r /etc/apt/keyrings/docker.gpg
 
-- name: Add ubuntu 20 focal stable repository into sources list
+- name: Set up the repository
   become: true
   ansible.builtin.shell: |
-    sudo add-apt-repository "deb [arch=arm64] https://download.docker.com/linux/ubuntu focal stable" -y 
-  when:
-    - ansible_distribution_major_version == "20"
-
-- name: Add ubuntu 22 focal stable repository into sources list
-  become: true
-  ansible.builtin.shell: |
-    sudo add-apt-repository "deb [arch=arm64] https://download.docker.com/linux/ubuntu kinetic stable" -y
-  when:
-    - ansible_distribution_major_version == "22"
+    echo \
+    "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+    "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | \
+    sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 
 - name: Update Cache
   become: true
   ansible.builtin.shell: |
-    sudo apt-get update
+    sudo apt update
 
 - name: Install containerd on Ubuntu based hosts
   ansible.builtin.apt: 
@@ -114,8 +116,16 @@
     block: |
       deb https://apt.kubernetes.io/ kubernetes-xenial main
 
+- name: Update Cache
+  become: true
+  ansible.builtin.shell: |
+    sudo apt update
+
+- name: Reboot / Temproary fix for dpkg lock :S
+  ansible.builtin.reboot:
+    reboot_timeout: "{{ ubuntu_reboot_timeo }}"
+
 - name: Install kubernetes packages
   become: true
   ansible.builtin.apt:
     name: "{{ kubernetes_ubuntu_pkgs }}"
-    update_cache: yes

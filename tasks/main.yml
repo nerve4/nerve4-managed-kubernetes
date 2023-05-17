@@ -6,28 +6,24 @@
     path: "/etc/modules-load.d/containerd.conf"
   register: containerd_check
 
-- include: setup-users.yml
+- include_tasks: setup-users.yml
 
-- include: rhel-install-k8s.yml
+- include_tasks: rhel-install-k8s.yml
   when: 
     containerd_check.stat.exists == False and
     (ansible_distribution == "CentOS") or
     (ansible_distribution == "RedHat") or
     (ansible_distribution in "Rocky")
 
-- include: ubuntu-install-k8s.yml
+- include_tasks: ubuntu-install-k8s.yml
   when:
     - containerd_check.stat.exists == False
     - ansible_distribution == "Ubuntu"
 
-- include: setup-k8s-master.yml
+- include_tasks: setup-base-cni.yml
+
+- include_tasks: setup-k8s-master.yml
   when: masters_var is defined and masters_var
 
-- include: setup-k8s-workers.yml
+- include_tasks: setup-k8s-workers.yml
   when: workers_var is defined and workers_var
-
-#- include: setup-calico.yml - TBC
-#  when: calico_var is defined and calico_var
-
-#- include: setup-cilium.yml - TBC
-#  when: cilium_var is defined and cilium_var
